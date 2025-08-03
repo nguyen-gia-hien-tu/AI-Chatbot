@@ -109,6 +109,9 @@ function App() {
                 // Buffer is empty, stop typing animation
                 clearInterval(typingIntervalRef.current);
                 typingIntervalRef.current = null;
+
+                // Set loading to false only when typing is completely finished
+                setLoading(false);
             }
         }, 10); // 10ms between characters - adjust typing speed
     };
@@ -179,7 +182,7 @@ function App() {
                         }
 
                         if (data.is_complete) {
-                            setLoading(false);
+                            // Don't set loading to false immediately - wait for typing to finish
                             // Mark the last message as no longer streaming and show thought if it exists
                             setMessages(prev => {
                                 const updated = [...prev];
@@ -196,15 +199,24 @@ function App() {
                         }
                     } catch (error) {
                         console.error('Error parsing SSE data:', error);
-                        setLoading(false);
+                        // Only set loading to false if there's no ongoing typing
+                        if (!typingIntervalRef.current) {
+                            setLoading(false);
+                        }
                     }
                 },
                 onclose() {
-                    setLoading(false);
+                    // Only set loading to false if there's no ongoing typing
+                    if (!typingIntervalRef.current) {
+                        setLoading(false);
+                    }
                 },
                 onerror(err) {
                     console.error("EventSource failed:", err);
-                    setLoading(false);
+                    // Only set loading to false if there's no ongoing typing
+                    if (!typingIntervalRef.current) {
+                        setLoading(false);
+                    }
                     throw err;
                 }
             });
