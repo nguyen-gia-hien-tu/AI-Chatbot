@@ -6,6 +6,8 @@ function App() {
     const [question, setQuestion] = useState('');
     const [messages, setMessages] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [showTools, setShowTools] = useState(false);
+    const [selectedTools, setSelectedTools] = useState([]);
     const abortControllerRef = useRef(null);
     const bufferRef = useRef('');
     const typingIntervalRef = useRef(null);
@@ -36,6 +38,22 @@ function App() {
                 thoughtExpanded: !updated[messageIndex].thoughtExpanded
             };
             return updated;
+        });
+    };
+
+    // Toggle tools dropdown
+    const toggleTools = () => {
+        setShowTools(prev => !prev);
+    };
+
+    // Toggle tool selection
+    const toggleTool = (toolName) => {
+        setSelectedTools(prev => {
+            if (prev.includes(toolName)) {
+                return prev.filter(tool => tool !== toolName);
+            } else {
+                return [...prev, toolName];
+            }
         });
     };
 
@@ -160,7 +178,10 @@ function App() {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ question: userMessage }),
+                body: JSON.stringify({
+                    question: userMessage,
+                    tools: selectedTools.length > 0 ? selectedTools : undefined
+                }),
                 signal: abortControllerRef.current.signal,
                 onopen(res) {
                     if (res.ok && res.status === 200) {
@@ -273,6 +294,20 @@ function App() {
             }
         };
     }, []);
+
+    // Close tools dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (showTools && !event.target.closest('.tools-container')) {
+                setShowTools(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [showTools]);
 
     return (
         <div style={{
@@ -500,6 +535,96 @@ function App() {
                 borderTop: '1px solid #ddd',
                 backgroundColor: '#f8f9fa'
             }}>
+                {/* Tools Section */}
+                <div className="tools-container" style={{ marginBottom: '15px', position: 'relative' }}>
+                    <button
+                        type="button"
+                        onClick={toggleTools}
+                        style={{
+                            padding: '8px 16px',
+                            fontSize: '14px',
+                            backgroundColor: selectedTools.length > 0 ? '#007bff' : '#f8f9fa',
+                            color: selectedTools.length > 0 ? 'white' : '#666',
+                            border: '1px solid #ddd',
+                            borderRadius: '20px',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            fontWeight: '500',
+                            transition: 'all 0.2s ease'
+                        }}
+                    >
+                        🛠️ Tools
+                        {selectedTools.length > 0 && (
+                            <span style={{
+                                backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                                borderRadius: '10px',
+                                padding: '2px 6px',
+                                fontSize: '12px',
+                                minWidth: '16px',
+                                textAlign: 'center'
+                            }}>
+                                {selectedTools.length}
+                            </span>
+                        )}
+                        <span style={{
+                            transform: showTools ? 'rotate(180deg)' : 'rotate(0deg)',
+                            transition: 'transform 0.2s ease',
+                            fontSize: '12px'
+                        }}>
+                            ▼
+                        </span>
+                    </button>
+
+                    {/* Tools Dropdown */}
+                    {showTools && (
+                        <div style={{
+                            position: 'absolute',
+                            top: '100%',
+                            left: '0',
+                            marginTop: '5px',
+                            backgroundColor: 'white',
+                            border: '1px solid #ddd',
+                            borderRadius: '8px',
+                            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                            zIndex: 1000,
+                            minWidth: '200px'
+                        }}>
+                            <div
+                                onClick={() => toggleTool('search')}
+                                style={{
+                                    padding: '12px 16px',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                    borderRadius: '8px',
+                                    backgroundColor: selectedTools.includes('search') ? '#f0f8ff' : 'white',
+                                    borderLeft: selectedTools.includes('search') ? '3px solid #007bff' : '3px solid transparent',
+                                    transition: 'all 0.2s ease'
+                                }}
+                                onMouseEnter={(e) => {
+                                    if (!selectedTools.includes('search')) {
+                                        e.target.style.backgroundColor = '#f8f9fa';
+                                    }
+                                }}
+                                onMouseLeave={(e) => {
+                                    if (!selectedTools.includes('search')) {
+                                        e.target.style.backgroundColor = 'white';
+                                    }
+                                }}
+                            >
+                                <span style={{ fontSize: '18px' }}>🌐</span>
+                                <span style={{ fontSize: '14px', fontWeight: '500' }}>Web Search</span>
+                                {selectedTools.includes('search') && (
+                                    <span style={{ marginLeft: 'auto', color: '#007bff', fontSize: '14px' }}>✓</span>
+                                )}
+                            </div>
+                        </div>
+                    )}
+                </div>
+
                 <form onSubmit={handleSubmit} style={{ position: 'relative' }}>
                     <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
                         <input
