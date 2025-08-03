@@ -3,6 +3,7 @@ from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from google import genai
+from google.genai import types
 import json
 
 
@@ -36,16 +37,38 @@ async def answer_question_generator(question: str):
     response = await client.aio.models.generate_content_stream(
         model="gemini-2.5-flash",
         contents=question,
+        config=types.GenerateContentConfig(
+            thinking_config=types.ThinkingConfig(
+                include_thoughts=True,
+            )
+        )
     )
 
     async for chunk in response:
-        data = {
-            "content": chunk.text,
-            "is_complete": False,
-        }
-        yield f"data: {json.dumps(data)}\n\n"
+        for part in chunk.candidates[0].content.parts:
+            if not part.text:   
+                continue
+            elif part.thought:
+                data = {
+                    "thought": True,
+                    "content": part.text,
+                    "is_complete": False,
+                }
+            elif part.text:
+                data = {
+                    "thought": False,
+                    "content": part.text,
+                    "is_complete": False,
+                }
 
-    yield f"data: {json.dumps({'content': '', 'is_complete': True})}\n\n"
+            print("*" * 50)
+            print(data)
+            print("*" * 50)
+            print()
+                
+            yield f"data: {json.dumps(data)}\n\n"
+
+    yield f"data: {json.dumps({'thought': False, 'content': '', 'is_complete': True})}\n\n"
 
 
 
