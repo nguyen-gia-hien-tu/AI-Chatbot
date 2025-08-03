@@ -377,8 +377,9 @@ function App() {
                                         <div style={{
                                             marginBottom: '12px',
                                             border: '1px solid #e0e0e0',
-                                            borderRadius: '8px',
-                                            backgroundColor: '#fafafa'
+                                            borderRadius: '12px',
+                                            backgroundColor: '#fafafa',
+                                            overflow: 'hidden'
                                         }}>
                                             {/* Thought Header - Clickable */}
                                             <div
@@ -386,7 +387,7 @@ function App() {
                                                 style={{
                                                     padding: '8px 12px',
                                                     backgroundColor: '#f0f0f0',
-                                                    borderRadius: '8px 8px 0 0',
+                                                    borderRadius: message.thoughtExpanded ? '12px 12px 0 0' : '12px',
                                                     cursor: 'pointer',
                                                     display: 'flex',
                                                     alignItems: 'center',
@@ -400,7 +401,7 @@ function App() {
                                                 <span style={{
                                                     transform: message.thoughtExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
                                                     transition: 'transform 0.2s ease',
-                                                    fontSize: '12px'
+                                                    fontSize: '12px',
                                                 }}>
                                                     ▶
                                                 </span>
@@ -415,7 +416,8 @@ function App() {
                                                     color: '#555',
                                                     fontStyle: 'italic',
                                                     lineHeight: '1.4',
-                                                    backgroundColor: '#fafafa'
+                                                    backgroundColor: '#fafafa',
+                                                    borderRadius: '0 0 12px 12px'
                                                 }}>
                                                     <ReactMarkdown
                                                         components={{
@@ -613,29 +615,28 @@ function App() {
 
                         {/* Tools Section - inside the same container, below the input */}
                         <div className="tools-container" style={{
-                            borderTop: '1px solid #f0f0f0',
                             padding: '8px 16px',
                             position: 'relative',
                             display: 'flex',
                             alignItems: 'center',
-                            backgroundColor: '#fafafa'
+                            backgroundColor: 'white'
                         }}>
                             <button
                                 type="button"
                                 onClick={toggleTools}
                                 style={{
-                                    padding: '4px 8px',
-                                    fontSize: '12px',
+                                    padding: '6px 12px',
+                                    fontSize: '14px',
                                     backgroundColor: 'transparent',
                                     color: selectedTools.length > 0 ? '#007bff' : '#666',
-                                    border: 'none',
+                                    border: '1px solid #ddd',
                                     cursor: 'pointer',
                                     display: 'flex',
                                     alignItems: 'center',
                                     gap: '4px',
                                     fontWeight: '500',
                                     transition: 'all 0.2s ease',
-                                    borderRadius: '8px'
+                                    borderRadius: '20px'
                                 }}
                             >
                                 🛠️ Tools
