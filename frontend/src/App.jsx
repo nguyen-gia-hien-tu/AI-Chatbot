@@ -131,7 +131,7 @@ function App() {
                 // Set loading to false only when typing is completely finished
                 setLoading(false);
             }
-        }, 10); // 10ms between characters - adjust typing speed
+        }, 20); // 20ms between characters - adjust typing speed
     };
 
     const handleSubmit = async (e) => {
@@ -417,55 +417,47 @@ function App() {
                                                     lineHeight: '1.4',
                                                     backgroundColor: '#fafafa'
                                                 }}>
-                                                    {message.streaming ? (
-                                                        // Show raw text while streaming to avoid broken markdown
-                                                        <div style={{ whiteSpace: 'pre-wrap' }}>
-                                                            {message.thought}
-                                                        </div>
-                                                    ) : (
-                                                        // Show rendered markdown after streaming is complete
-                                                        <ReactMarkdown
-                                                            components={{
-                                                                p: ({ node, ...props }) => <p style={{ margin: '0.3em 0', lineHeight: '1.4' }} {...props} />,
-                                                                h1: ({ node, ...props }) => <h1 style={{ fontSize: '1.2em', margin: '0.4em 0', fontWeight: 'bold', color: '#444' }} {...props} />,
-                                                                h2: ({ node, ...props }) => <h2 style={{ fontSize: '1.1em', margin: '0.3em 0', fontWeight: 'bold', color: '#444' }} {...props} />,
-                                                                h3: ({ node, ...props }) => <h3 style={{ fontSize: '1.0em', margin: '0.2em 0', fontWeight: 'bold', color: '#444' }} {...props} />,
-                                                                strong: ({ node, ...props }) => <strong style={{ fontWeight: 'bold', color: '#333' }} {...props} />,
-                                                                em: ({ node, ...props }) => <em style={{ fontStyle: 'italic' }} {...props} />,
-                                                                code: ({ node, inline, ...props }) =>
-                                                                    inline ?
-                                                                        <code style={{
-                                                                            backgroundColor: '#e9ecef',
-                                                                            padding: '1px 3px',
-                                                                            borderRadius: '2px',
-                                                                            fontSize: '0.85em',
-                                                                            color: '#c7254e'
-                                                                        }} {...props} /> :
-                                                                        <code style={{
-                                                                            display: 'block',
-                                                                            backgroundColor: '#f8f9fa',
-                                                                            padding: '8px',
-                                                                            borderRadius: '4px',
-                                                                            fontSize: '0.85em',
-                                                                            margin: '0.3em 0',
-                                                                            border: '1px solid #e9ecef',
-                                                                            color: '#333'
-                                                                        }} {...props} />,
-                                                                ul: ({ node, ...props }) => <ul style={{ margin: '0.3em 0', paddingLeft: '1.2em' }} {...props} />,
-                                                                ol: ({ node, ...props }) => <ol style={{ margin: '0.3em 0', paddingLeft: '1.2em' }} {...props} />,
-                                                                li: ({ node, ...props }) => <li style={{ margin: '0.1em 0' }} {...props} />,
-                                                                blockquote: ({ node, ...props }) => <blockquote style={{
-                                                                    borderLeft: '3px solid #ccc',
-                                                                    paddingLeft: '0.8em',
-                                                                    margin: '0.3em 0',
-                                                                    fontStyle: 'italic',
-                                                                    color: '#666'
-                                                                }} {...props} />
-                                                            }}
-                                                        >
-                                                            {message.thought}
-                                                        </ReactMarkdown>
-                                                    )}
+                                                    <ReactMarkdown
+                                                        components={{
+                                                            p: ({ node, ...props }) => <p style={{ margin: '0.3em 0', lineHeight: '1.4' }} {...props} />,
+                                                            h1: ({ node, ...props }) => <h1 style={{ fontSize: '1.2em', margin: '0.4em 0', fontWeight: 'bold', color: '#444' }} {...props} />,
+                                                            h2: ({ node, ...props }) => <h2 style={{ fontSize: '1.1em', margin: '0.3em 0', fontWeight: 'bold', color: '#444' }} {...props} />,
+                                                            h3: ({ node, ...props }) => <h3 style={{ fontSize: '1.0em', margin: '0.2em 0', fontWeight: 'bold', color: '#444' }} {...props} />,
+                                                            strong: ({ node, ...props }) => <strong style={{ fontWeight: 'bold', color: '#333' }} {...props} />,
+                                                            em: ({ node, ...props }) => <em style={{ fontStyle: 'italic' }} {...props} />,
+                                                            code: ({ node, inline, ...props }) =>
+                                                                inline ?
+                                                                    <code style={{
+                                                                        backgroundColor: '#e9ecef',
+                                                                        padding: '1px 3px',
+                                                                        borderRadius: '2px',
+                                                                        fontSize: '0.85em',
+                                                                        color: '#c7254e'
+                                                                    }} {...props} /> :
+                                                                    <code style={{
+                                                                        display: 'block',
+                                                                        backgroundColor: '#f8f9fa',
+                                                                        padding: '8px',
+                                                                        borderRadius: '4px',
+                                                                        fontSize: '0.85em',
+                                                                        margin: '0.3em 0',
+                                                                        border: '1px solid #e9ecef',
+                                                                        color: '#333'
+                                                                    }} {...props} />,
+                                                            ul: ({ node, ...props }) => <ul style={{ margin: '0.3em 0', paddingLeft: '1.2em' }} {...props} />,
+                                                            ol: ({ node, ...props }) => <ol style={{ margin: '0.3em 0', paddingLeft: '1.2em' }} {...props} />,
+                                                            li: ({ node, ...props }) => <li style={{ margin: '0.1em 0' }} {...props} />,
+                                                            blockquote: ({ node, ...props }) => <blockquote style={{
+                                                                borderLeft: '3px solid #ccc',
+                                                                paddingLeft: '0.8em',
+                                                                margin: '0.3em 0',
+                                                                fontStyle: 'italic',
+                                                                color: '#666'
+                                                            }} {...props} />
+                                                        }}
+                                                    >
+                                                        {message.thought}
+                                                    </ReactMarkdown>
                                                 </div>
                                             )}
                                         </div>
