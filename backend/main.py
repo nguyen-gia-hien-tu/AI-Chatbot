@@ -1,3 +1,5 @@
+from typing import List, Optional
+from enum import Enum
 from fastapi import FastAPI
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -20,27 +22,50 @@ app.add_middleware(
 )
 
 
+class Tool(Enum):
+    """
+    Model for available tools that can be used by the AI
+    """
+    SEARCH = "search"
+
+    def __str__(self):
+        return self.value
+
+
 class AnswerQuestionRequest(BaseModel):
     """
     Model for the request of the answer_question endpoint
     """
     question: str
+    tools: Optional[List[Tool]] = []
 
 
-async def answer_question_generator(question: str):
+async def answer_question_generator(
+    question: str,
+    tools: Optional[List[Tool]] = None
+):
     """
     Answer question using Google Gemini API and stream the response
 
     Args:
         question (str): The question to be answered
     """
+    tools_to_use = []
+    for tool in tools or []:
+        if tool == Tool.SEARCH:
+            search_tool = types.Tool(
+                google_search=types.GoogleSearch()
+            )
+            tools_to_use.append(search_tool)
+
     response = await client.aio.models.generate_content_stream(
         model="gemini-2.5-flash",
         contents=question,
         config=types.GenerateContentConfig(
             thinking_config=types.ThinkingConfig(
                 include_thoughts=True,
-            )
+            ),
+            tools=tools_to_use,
         )
     )
 
@@ -72,9 +97,8 @@ async def answer_question(request: AnswerQuestionRequest):
     """
     Endpoint that accepts a question and returns a streaming response
     """
-    question = request.question
     return StreamingResponse(
-        answer_question_generator(question), 
+        answer_question_generator(request.question, request.tools), 
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",
