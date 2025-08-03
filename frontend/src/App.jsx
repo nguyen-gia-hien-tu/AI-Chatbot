@@ -110,7 +110,7 @@ function App() {
                 clearInterval(typingIntervalRef.current);
                 typingIntervalRef.current = null;
             }
-        }, 15); // 15ms between characters - adjust typing speed
+        }, 10); // 10ms between characters - adjust typing speed
     };
 
     const handleSubmit = async (e) => {
@@ -216,6 +216,40 @@ function App() {
         }
     };
 
+    // Stop streaming function
+    const handleStop = () => {
+        // Abort the current request
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
+        }
+
+        // Stop any ongoing typing animation
+        if (typingIntervalRef.current) {
+            clearInterval(typingIntervalRef.current);
+            typingIntervalRef.current = null;
+        }
+
+        // Clear buffer
+        bufferRef.current = '';
+
+        // Reset loading state
+        setLoading(false);
+
+        // Mark the last message as no longer streaming and finalize it
+        setMessages(prev => {
+            const updated = [...prev];
+            if (updated.length > 0 && updated[updated.length - 1].role === 'assistant') {
+                updated[updated.length - 1] = {
+                    ...updated[updated.length - 1],
+                    streaming: false,
+                    showThought: updated[updated.length - 1].thought.length > 0,
+                    thoughtExpanded: updated[updated.length - 1].thought.length > 0
+                };
+            }
+            return updated;
+        });
+    };
+
     // Cleanup on component unmount
     useEffect(() => {
         return () => {
@@ -246,202 +280,214 @@ function App() {
                 <h1 style={{ margin: 0, fontSize: '24px', color: '#333' }}>AI Chat Assistant</h1>
             </div>
 
-            {/* Messages Container */}
+            {/* Messages Container Wrapper */}
             <div style={{
                 flex: 1,
-                overflowY: 'auto',
-                padding: '20px',
-                backgroundColor: '#ffffff',
-                borderRadius: '30px',
-                margin: '10px'
+                margin: '10px',
+                display: 'flex',
+                position: 'relative'
             }}>
-                {messages.length === 0 && (
-                    <div style={{
-                        textAlign: 'center',
-                        color: '#666',
-                        marginTop: '50px',
-                        fontSize: '18px'
+                {/* Main Messages Area */}
+                <div
+                    className="messages-container"
+                    style={{
+                        flex: 1,
+                        overflowY: 'auto',
+                        padding: '20px',
+                        backgroundColor: '#ffffff',
+                        borderRadius: '30px',
+                        scrollbarWidth: 'thin',
+                        scrollbarColor: '#c1c1c1 transparent',
+                        marginRight: '15px' // Space for external scrollbar
                     }}>
-                        👋 Hello! Ask me anything to get started.
-                    </div>
-                )}
-
-                {messages.map((message, index) => (
-                    <div key={index} style={{
-                        marginBottom: '20px',
-                        display: 'flex',
-                        justifyContent: message.role === 'user' ? 'flex-end' : 'flex-start'
-                    }}>
+                    {messages.length === 0 && (
                         <div style={{
-                            maxWidth: '70%',
-                            padding: '12px 16px',
-                            borderRadius: '18px',
-                            backgroundColor: message.role === 'user' ? '#007bff' : '#f1f3f4',
-                            color: message.role === 'user' ? 'white' : '#333',
-                            wordWrap: 'break-word',
-                            position: 'relative'
+                            textAlign: 'center',
+                            color: '#666',
+                            marginTop: '50px',
+                            fontSize: '18px'
                         }}>
-                            {message.role === 'user' ? (
-                                // User messages - plain text
-                                <span style={{ whiteSpace: 'pre-wrap' }}>{message.content}</span>
-                            ) : (
-                                // Assistant messages - render as markdown with thought section
-                                <div>
-                                    {/* Thought Process Section */}
-                                    {message.showThought && (
+                            👋 Hello! Ask me anything to get started.
+                        </div>
+                    )}
+
+                    {messages.map((message, index) => (
+                        <div key={index} style={{
+                            marginBottom: '20px',
+                            display: 'flex',
+                            justifyContent: message.role === 'user' ? 'flex-end' : 'flex-start'
+                        }}>
+                            <div style={{
+                                maxWidth: '70%',
+                                padding: '12px 16px',
+                                borderRadius: '18px',
+                                backgroundColor: message.role === 'user' ? '#007bff' : '#f1f3f4',
+                                color: message.role === 'user' ? 'white' : '#333',
+                                wordWrap: 'break-word',
+                                position: 'relative'
+                            }}>
+                                {message.role === 'user' ? (
+                                    // User messages - plain text
+                                    <span style={{ whiteSpace: 'pre-wrap' }}>{message.content}</span>
+                                ) : (
+                                    // Assistant messages - render as markdown with thought section
+                                    <div>
+                                        {/* Thought Process Section */}
+                                        {message.showThought && (
+                                            <div style={{
+                                                marginBottom: '12px',
+                                                border: '1px solid #e0e0e0',
+                                                borderRadius: '8px',
+                                                backgroundColor: '#fafafa'
+                                            }}>
+                                                {/* Thought Header - Clickable */}
+                                                <div
+                                                    onClick={() => toggleThought(index)}
+                                                    style={{
+                                                        padding: '8px 12px',
+                                                        backgroundColor: '#f0f0f0',
+                                                        borderRadius: '8px 8px 0 0',
+                                                        cursor: 'pointer',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        gap: '8px',
+                                                        fontSize: '0.9em',
+                                                        fontWeight: '500',
+                                                        color: '#666',
+                                                        borderBottom: message.thoughtExpanded ? '1px solid #e0e0e0' : 'none'
+                                                    }}
+                                                >
+                                                    <span style={{
+                                                        transform: message.thoughtExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
+                                                        transition: 'transform 0.2s ease',
+                                                        fontSize: '12px'
+                                                    }}>
+                                                        ▶
+                                                    </span>
+                                                    🔍 Thought Process
+                                                </div>
+
+                                                {/* Thought Content - Collapsible */}
+                                                {message.thoughtExpanded && (
+                                                    <div style={{
+                                                        padding: '12px',
+                                                        fontSize: '0.9em',
+                                                        color: '#555',
+                                                        fontStyle: 'italic',
+                                                        lineHeight: '1.4',
+                                                        backgroundColor: '#fafafa'
+                                                    }}>
+                                                        {message.streaming ? (
+                                                            // Show raw text while streaming to avoid broken markdown
+                                                            <div style={{ whiteSpace: 'pre-wrap' }}>
+                                                                {message.thought}
+                                                            </div>
+                                                        ) : (
+                                                            // Show rendered markdown after streaming is complete
+                                                            <ReactMarkdown
+                                                                components={{
+                                                                    p: ({ node, ...props }) => <p style={{ margin: '0.3em 0', lineHeight: '1.4' }} {...props} />,
+                                                                    h1: ({ node, ...props }) => <h1 style={{ fontSize: '1.2em', margin: '0.4em 0', fontWeight: 'bold', color: '#444' }} {...props} />,
+                                                                    h2: ({ node, ...props }) => <h2 style={{ fontSize: '1.1em', margin: '0.3em 0', fontWeight: 'bold', color: '#444' }} {...props} />,
+                                                                    h3: ({ node, ...props }) => <h3 style={{ fontSize: '1.0em', margin: '0.2em 0', fontWeight: 'bold', color: '#444' }} {...props} />,
+                                                                    strong: ({ node, ...props }) => <strong style={{ fontWeight: 'bold', color: '#333' }} {...props} />,
+                                                                    em: ({ node, ...props }) => <em style={{ fontStyle: 'italic' }} {...props} />,
+                                                                    code: ({ node, inline, ...props }) =>
+                                                                        inline ?
+                                                                            <code style={{
+                                                                                backgroundColor: '#e9ecef',
+                                                                                padding: '1px 3px',
+                                                                                borderRadius: '2px',
+                                                                                fontSize: '0.85em',
+                                                                                color: '#c7254e'
+                                                                            }} {...props} /> :
+                                                                            <code style={{
+                                                                                display: 'block',
+                                                                                backgroundColor: '#f8f9fa',
+                                                                                padding: '8px',
+                                                                                borderRadius: '4px',
+                                                                                fontSize: '0.85em',
+                                                                                margin: '0.3em 0',
+                                                                                border: '1px solid #e9ecef',
+                                                                                color: '#333'
+                                                                            }} {...props} />,
+                                                                    ul: ({ node, ...props }) => <ul style={{ margin: '0.3em 0', paddingLeft: '1.2em' }} {...props} />,
+                                                                    ol: ({ node, ...props }) => <ol style={{ margin: '0.3em 0', paddingLeft: '1.2em' }} {...props} />,
+                                                                    li: ({ node, ...props }) => <li style={{ margin: '0.1em 0' }} {...props} />,
+                                                                    blockquote: ({ node, ...props }) => <blockquote style={{
+                                                                        borderLeft: '3px solid #ccc',
+                                                                        paddingLeft: '0.8em',
+                                                                        margin: '0.3em 0',
+                                                                        fontStyle: 'italic',
+                                                                        color: '#666'
+                                                                    }} {...props} />
+                                                                }}
+                                                            >
+                                                                {message.thought}
+                                                            </ReactMarkdown>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+
+                                        {/* Main Response Content */}
                                         <div style={{
-                                            marginBottom: '12px',
-                                            border: '1px solid #e0e0e0',
-                                            borderRadius: '8px',
-                                            backgroundColor: '#fafafa'
+                                            fontFamily: 'inherit',
+                                            lineHeight: '1.5'
                                         }}>
-                                            {/* Thought Header - Clickable */}
-                                            <div
-                                                onClick={() => toggleThought(index)}
-                                                style={{
-                                                    padding: '8px 12px',
-                                                    backgroundColor: '#f0f0f0',
-                                                    borderRadius: '8px 8px 0 0',
-                                                    cursor: 'pointer',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    gap: '8px',
-                                                    fontSize: '0.9em',
-                                                    fontWeight: '500',
-                                                    color: '#666',
-                                                    borderBottom: message.thoughtExpanded ? '1px solid #e0e0e0' : 'none'
+                                            <ReactMarkdown
+                                                components={{
+                                                    // Style markdown elements
+                                                    h1: ({ node, ...props }) => <h1 style={{ fontSize: '1.5em', margin: '0.5em 0', fontWeight: 'bold' }} {...props} />,
+                                                    h2: ({ node, ...props }) => <h2 style={{ fontSize: '1.3em', margin: '0.4em 0', fontWeight: 'bold' }} {...props} />,
+                                                    h3: ({ node, ...props }) => <h3 style={{ fontSize: '1.1em', margin: '0.3em 0', fontWeight: 'bold' }} {...props} />,
+                                                    p: ({ node, ...props }) => <p style={{ margin: '0.5em 0', lineHeight: '1.5' }} {...props} />,
+                                                    code: ({ node, inline, ...props }) =>
+                                                        inline ?
+                                                            <code style={{
+                                                                backgroundColor: '#e9ecef',
+                                                                padding: '2px 4px',
+                                                                borderRadius: '3px',
+                                                                fontSize: '0.9em',
+                                                                color: '#d63384'
+                                                            }} {...props} /> :
+                                                            <code style={{
+                                                                display: 'block',
+                                                                backgroundColor: '#f8f9fa',
+                                                                padding: '10px',
+                                                                borderRadius: '5px',
+                                                                fontSize: '0.9em',
+                                                                overflowX: 'auto',
+                                                                margin: '0.5em 0',
+                                                                border: '1px solid #e9ecef'
+                                                            }} {...props} />,
+                                                    pre: ({ node, ...props }) => <pre style={{ margin: 0 }} {...props} />,
+                                                    ul: ({ node, ...props }) => <ul style={{ margin: '0.5em 0', paddingLeft: '1.5em' }} {...props} />,
+                                                    ol: ({ node, ...props }) => <ol style={{ margin: '0.5em 0', paddingLeft: '1.5em' }} {...props} />,
+                                                    li: ({ node, ...props }) => <li style={{ margin: '0.2em 0' }} {...props} />,
+                                                    blockquote: ({ node, ...props }) => <blockquote style={{
+                                                        borderLeft: '4px solid #dee2e6',
+                                                        paddingLeft: '1em',
+                                                        margin: '0.5em 0',
+                                                        fontStyle: 'italic',
+                                                        color: '#6c757d'
+                                                    }} {...props} />,
+                                                    strong: ({ node, ...props }) => <strong style={{ fontWeight: 'bold' }} {...props} />,
+                                                    em: ({ node, ...props }) => <em style={{ fontStyle: 'italic' }} {...props} />,
+                                                    a: ({ node, ...props }) => <a style={{ color: '#0066cc', textDecoration: 'underline' }} {...props} />
                                                 }}
                                             >
-                                                <span style={{
-                                                    transform: message.thoughtExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
-                                                    transition: 'transform 0.2s ease',
-                                                    fontSize: '12px'
-                                                }}>
-                                                    ▶
-                                                </span>
-                                                🔍 Thought Process
-                                            </div>
-
-                                            {/* Thought Content - Collapsible */}
-                                            {message.thoughtExpanded && (
-                                                <div style={{
-                                                    padding: '12px',
-                                                    fontSize: '0.9em',
-                                                    color: '#555',
-                                                    fontStyle: 'italic',
-                                                    lineHeight: '1.4',
-                                                    backgroundColor: '#fafafa'
-                                                }}>
-                                                    {message.streaming ? (
-                                                        // Show raw text while streaming to avoid broken markdown
-                                                        <div style={{ whiteSpace: 'pre-wrap' }}>
-                                                            {message.thought}
-                                                        </div>
-                                                    ) : (
-                                                        // Show rendered markdown after streaming is complete
-                                                        <ReactMarkdown
-                                                            components={{
-                                                                p: ({ node, ...props }) => <p style={{ margin: '0.3em 0', lineHeight: '1.4' }} {...props} />,
-                                                                h1: ({ node, ...props }) => <h1 style={{ fontSize: '1.2em', margin: '0.4em 0', fontWeight: 'bold', color: '#444' }} {...props} />,
-                                                                h2: ({ node, ...props }) => <h2 style={{ fontSize: '1.1em', margin: '0.3em 0', fontWeight: 'bold', color: '#444' }} {...props} />,
-                                                                h3: ({ node, ...props }) => <h3 style={{ fontSize: '1.0em', margin: '0.2em 0', fontWeight: 'bold', color: '#444' }} {...props} />,
-                                                                strong: ({ node, ...props }) => <strong style={{ fontWeight: 'bold', color: '#333' }} {...props} />,
-                                                                em: ({ node, ...props }) => <em style={{ fontStyle: 'italic' }} {...props} />,
-                                                                code: ({ node, inline, ...props }) =>
-                                                                    inline ?
-                                                                        <code style={{
-                                                                            backgroundColor: '#e9ecef',
-                                                                            padding: '1px 3px',
-                                                                            borderRadius: '2px',
-                                                                            fontSize: '0.85em',
-                                                                            color: '#c7254e'
-                                                                        }} {...props} /> :
-                                                                        <code style={{
-                                                                            display: 'block',
-                                                                            backgroundColor: '#f8f9fa',
-                                                                            padding: '8px',
-                                                                            borderRadius: '4px',
-                                                                            fontSize: '0.85em',
-                                                                            margin: '0.3em 0',
-                                                                            border: '1px solid #e9ecef',
-                                                                            color: '#333'
-                                                                        }} {...props} />,
-                                                                ul: ({ node, ...props }) => <ul style={{ margin: '0.3em 0', paddingLeft: '1.2em' }} {...props} />,
-                                                                ol: ({ node, ...props }) => <ol style={{ margin: '0.3em 0', paddingLeft: '1.2em' }} {...props} />,
-                                                                li: ({ node, ...props }) => <li style={{ margin: '0.1em 0' }} {...props} />,
-                                                                blockquote: ({ node, ...props }) => <blockquote style={{
-                                                                    borderLeft: '3px solid #ccc',
-                                                                    paddingLeft: '0.8em',
-                                                                    margin: '0.3em 0',
-                                                                    fontStyle: 'italic',
-                                                                    color: '#666'
-                                                                }} {...props} />
-                                                            }}
-                                                        >
-                                                            {message.thought}
-                                                        </ReactMarkdown>
-                                                    )}
-                                                </div>
-                                            )}
+                                                {message.content}
+                                            </ReactMarkdown>
                                         </div>
-                                    )}
-
-                                    {/* Main Response Content */}
-                                    <div style={{
-                                        fontFamily: 'inherit',
-                                        lineHeight: '1.5'
-                                    }}>
-                                        <ReactMarkdown
-                                            components={{
-                                                // Style markdown elements
-                                                h1: ({ node, ...props }) => <h1 style={{ fontSize: '1.5em', margin: '0.5em 0', fontWeight: 'bold' }} {...props} />,
-                                                h2: ({ node, ...props }) => <h2 style={{ fontSize: '1.3em', margin: '0.4em 0', fontWeight: 'bold' }} {...props} />,
-                                                h3: ({ node, ...props }) => <h3 style={{ fontSize: '1.1em', margin: '0.3em 0', fontWeight: 'bold' }} {...props} />,
-                                                p: ({ node, ...props }) => <p style={{ margin: '0.5em 0', lineHeight: '1.5' }} {...props} />,
-                                                code: ({ node, inline, ...props }) =>
-                                                    inline ?
-                                                        <code style={{
-                                                            backgroundColor: '#e9ecef',
-                                                            padding: '2px 4px',
-                                                            borderRadius: '3px',
-                                                            fontSize: '0.9em',
-                                                            color: '#d63384'
-                                                        }} {...props} /> :
-                                                        <code style={{
-                                                            display: 'block',
-                                                            backgroundColor: '#f8f9fa',
-                                                            padding: '10px',
-                                                            borderRadius: '5px',
-                                                            fontSize: '0.9em',
-                                                            overflowX: 'auto',
-                                                            margin: '0.5em 0',
-                                                            border: '1px solid #e9ecef'
-                                                        }} {...props} />,
-                                                pre: ({ node, ...props }) => <pre style={{ margin: 0 }} {...props} />,
-                                                ul: ({ node, ...props }) => <ul style={{ margin: '0.5em 0', paddingLeft: '1.5em' }} {...props} />,
-                                                ol: ({ node, ...props }) => <ol style={{ margin: '0.5em 0', paddingLeft: '1.5em' }} {...props} />,
-                                                li: ({ node, ...props }) => <li style={{ margin: '0.2em 0' }} {...props} />,
-                                                blockquote: ({ node, ...props }) => <blockquote style={{
-                                                    borderLeft: '4px solid #dee2e6',
-                                                    paddingLeft: '1em',
-                                                    margin: '0.5em 0',
-                                                    fontStyle: 'italic',
-                                                    color: '#6c757d'
-                                                }} {...props} />,
-                                                strong: ({ node, ...props }) => <strong style={{ fontWeight: 'bold' }} {...props} />,
-                                                em: ({ node, ...props }) => <em style={{ fontStyle: 'italic' }} {...props} />,
-                                                a: ({ node, ...props }) => <a style={{ color: '#0066cc', textDecoration: 'underline' }} {...props} />
-                                            }}
-                                        >
-                                            {message.content}
-                                        </ReactMarkdown>
                                     </div>
-                                </div>
-                            )}
+                                )}
+                            </div>
                         </div>
-                    </div>
-                ))}
-                <div ref={messagesEndRef} />
+                    ))}
+                    <div ref={messagesEndRef} />
+                </div>
             </div>
 
             {/* Input Form */}
@@ -450,39 +496,79 @@ function App() {
                 borderTop: '1px solid #ddd',
                 backgroundColor: '#f8f9fa'
             }}>
-                <form onSubmit={handleSubmit} style={{ display: 'flex', gap: '10px' }}>
-                    <input
-                        type="text"
-                        value={question}
-                        onChange={(e) => setQuestion(e.target.value)}
-                        placeholder="Type your message..."
-                        style={{
-                            flex: 1,
-                            padding: '12px 16px',
-                            fontSize: '16px',
-                            border: '1px solid #ddd',
-                            borderRadius: '25px',
-                            outline: 'none',
-                            backgroundColor: 'white'
-                        }}
-                        disabled={loading}
-                    />
-                    <button
-                        type="submit"
-                        disabled={loading || !question.trim()}
-                        style={{
-                            padding: '12px 24px',
-                            fontSize: '16px',
-                            backgroundColor: loading || !question.trim() ? '#ccc' : '#007bff',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '25px',
-                            cursor: loading || !question.trim() ? 'not-allowed' : 'pointer',
-                            fontWeight: 'bold'
-                        }}
-                    >
-                        {loading ? '...' : 'Send'}
-                    </button>
+                <form onSubmit={handleSubmit} style={{ position: 'relative' }}>
+                    <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                        <input
+                            type="text"
+                            value={question}
+                            onChange={(e) => setQuestion(e.target.value)}
+                            placeholder="Type your message..."
+                            style={{
+                                width: '100%',
+                                padding: '12px 50px 12px 16px', // Extra padding on right for button
+                                fontSize: '16px',
+                                border: '1px solid #ddd',
+                                borderRadius: '25px',
+                                outline: 'none',
+                                backgroundColor: 'white',
+                                boxSizing: 'border-box'
+                            }}
+                            disabled={loading}
+                        />
+                        {!loading ? (
+                            <button
+                                type="submit"
+                                disabled={!question.trim()}
+                                style={{
+                                    position: 'absolute',
+                                    right: '8px',
+                                    width: '36px',
+                                    height: '36px',
+                                    backgroundColor: !question.trim() ? '#e0e0e0' : '#007bff',
+                                    color: !question.trim() ? '#999' : 'white',
+                                    border: 'none',
+                                    borderRadius: '50%',
+                                    cursor: !question.trim() ? 'not-allowed' : 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    fontSize: '16px',
+                                    transition: 'background-color 0.2s ease'
+                                }}
+                            >
+                                {/* Airplane icon (horizontal, pointing right) */}
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+                                </svg>
+                            </button>
+                        ) : (
+                            <button
+                                type="button"
+                                onClick={handleStop}
+                                style={{
+                                    position: 'absolute',
+                                    right: '8px',
+                                    width: '36px',
+                                    height: '36px',
+                                    backgroundColor: '#dc3545',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '50%',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    fontSize: '14px',
+                                    transition: 'background-color 0.2s ease'
+                                }}
+                            >
+                                {/* Stop icon (square inside circle) */}
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                                    <rect x="6" y="6" width="12" height="12" rx="1" />
+                                </svg>
+                            </button>
+                        )}
+                    </div>
                 </form>
             </div>
 
@@ -490,6 +576,32 @@ function App() {
                 body {
                 margin: 0;
                 padding: 0;
+                }
+                
+                /* Custom scrollbar styling - positioned outside the rounded area */
+                .messages-container::-webkit-scrollbar {
+                    width: 12px;
+                }
+                
+                .messages-container::-webkit-scrollbar-track {
+                    background: #f1f1f1;
+                    border-radius: 6px;
+                    margin: 10px 0;
+                }
+                
+                .messages-container::-webkit-scrollbar-thumb {
+                    background: #c1c1c1;
+                    border-radius: 6px;
+                    border: 1px solid #e0e0e0;
+                }
+                
+                .messages-container::-webkit-scrollbar-thumb:hover {
+                    background: #a1a1a1;
+                }
+                
+                /* Ensure scrollbar appears outside the rounded container */
+                .messages-container {
+                    scrollbar-gutter: stable;
                 }
             `}</style>
         </div>
