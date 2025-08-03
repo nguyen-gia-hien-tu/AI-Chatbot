@@ -527,168 +527,181 @@ function App() {
                 borderTop: '1px solid #ddd',
                 backgroundColor: '#f8f9fa'
             }}>
-                {/* Tools Section */}
-                <div className="tools-container" style={{ marginBottom: '15px', position: 'relative' }}>
-                    <button
-                        type="button"
-                        onClick={toggleTools}
-                        style={{
+                <form onSubmit={handleSubmit} style={{ position: 'relative' }}>
+                    {/* Combined Input and Tools Container */}
+                    <div style={{
+                        border: '1px solid #ddd',
+                        borderRadius: '25px',
+                        backgroundColor: 'white',
+                        position: 'relative',
+                        overflow: 'hidden'
+                    }}>
+                        {/* Text Input Area */}
+                        <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                            <input
+                                type="text"
+                                value={question}
+                                onChange={(e) => setQuestion(e.target.value)}
+                                placeholder="Type your message..."
+                                style={{
+                                    width: '100%',
+                                    padding: '16px 60px 16px 16px', // Only right padding for send/stop button
+                                    fontSize: '16px',
+                                    border: 'none',
+                                    outline: 'none',
+                                    backgroundColor: 'transparent',
+                                    boxSizing: 'border-box',
+                                    height: '56px'
+                                }}
+                                disabled={loading}
+                            />
+
+                            {!loading ? (
+                                <button
+                                    type="submit"
+                                    disabled={!question.trim()}
+                                    style={{
+                                        position: 'absolute',
+                                        right: '8px',
+                                        width: '40px',
+                                        height: '40px',
+                                        backgroundColor: !question.trim() ? '#e0e0e0' : '#007bff',
+                                        color: !question.trim() ? '#999' : 'white',
+                                        border: 'none',
+                                        borderRadius: '50%',
+                                        cursor: !question.trim() ? 'not-allowed' : 'pointer',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        fontSize: '16px',
+                                        transition: 'background-color 0.2s ease'
+                                    }}
+                                >
+                                    {/* Airplane icon (horizontal, pointing right) */}
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+                                    </svg>
+                                </button>
+                            ) : (
+                                <button
+                                    type="button"
+                                    onClick={handleStop}
+                                    style={{
+                                        position: 'absolute',
+                                        right: '8px',
+                                        width: '40px',
+                                        height: '40px',
+                                        backgroundColor: '#dc3545',
+                                        color: 'white',
+                                        border: 'none',
+                                        borderRadius: '50%',
+                                        cursor: 'pointer',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        fontSize: '14px',
+                                        transition: 'background-color 0.2s ease'
+                                    }}
+                                >
+                                    {/* Stop icon (square inside circle) */}
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                                        <rect x="6" y="6" width="12" height="12" rx="1" />
+                                    </svg>
+                                </button>
+                            )}
+                        </div>
+
+                        {/* Tools Section - inside the same container, below the input */}
+                        <div className="tools-container" style={{
+                            borderTop: '1px solid #f0f0f0',
                             padding: '8px 16px',
-                            fontSize: '14px',
-                            backgroundColor: selectedTools.length > 0 ? '#007bff' : '#f8f9fa',
-                            color: selectedTools.length > 0 ? 'white' : '#666',
-                            border: '1px solid #ddd',
-                            borderRadius: '20px',
-                            cursor: 'pointer',
+                            position: 'relative',
                             display: 'flex',
                             alignItems: 'center',
-                            gap: '6px',
-                            fontWeight: '500',
-                            transition: 'all 0.2s ease'
-                        }}
-                    >
-                        🛠️ Tools
-                        {selectedTools.length > 0 && (
-                            <span style={{
-                                backgroundColor: 'rgba(255, 255, 255, 0.3)',
-                                borderRadius: '10px',
-                                padding: '2px 6px',
-                                fontSize: '12px',
-                                minWidth: '16px',
-                                textAlign: 'center'
-                            }}>
-                                {selectedTools.length}
-                            </span>
-                        )}
-                        <span style={{
-                            transform: showTools ? 'rotate(180deg)' : 'rotate(0deg)',
-                            transition: 'transform 0.2s ease',
-                            fontSize: '12px'
+                            backgroundColor: '#fafafa'
                         }}>
-                            ▼
-                        </span>
-                    </button>
-
-                    {/* Tools Dropdown */}
-                    {showTools && (
-                        <div style={{
-                            position: 'absolute',
-                            top: '100%',
-                            left: '0',
-                            marginTop: '5px',
-                            backgroundColor: 'white',
-                            border: '1px solid #ddd',
-                            borderRadius: '8px',
-                            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-                            zIndex: 1000,
-                            minWidth: '200px'
-                        }}>
-                            <div
-                                onClick={() => toggleTool('search')}
-                                style={{
-                                    padding: '12px 16px',
-                                    cursor: 'pointer',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '8px',
-                                    borderRadius: '8px',
-                                    backgroundColor: selectedTools.includes('search') ? '#f0f8ff' : 'white',
-                                    borderLeft: selectedTools.includes('search') ? '3px solid #007bff' : '3px solid transparent',
-                                    transition: 'all 0.2s ease'
-                                }}
-                                onMouseEnter={(e) => {
-                                    if (!selectedTools.includes('search')) {
-                                        e.target.style.backgroundColor = '#f8f9fa';
-                                    }
-                                }}
-                                onMouseLeave={(e) => {
-                                    if (!selectedTools.includes('search')) {
-                                        e.target.style.backgroundColor = 'white';
-                                    }
-                                }}
-                            >
-                                <span style={{ fontSize: '18px' }}>🌐</span>
-                                <span style={{ fontSize: '14px', fontWeight: '500' }}>Web Search</span>
-                                {selectedTools.includes('search') && (
-                                    <span style={{ marginLeft: 'auto', color: '#007bff', fontSize: '14px' }}>✓</span>
-                                )}
-                            </div>
-                        </div>
-                    )}
-                </div>
-
-                <form onSubmit={handleSubmit} style={{ position: 'relative' }}>
-                    <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                        <input
-                            type="text"
-                            value={question}
-                            onChange={(e) => setQuestion(e.target.value)}
-                            placeholder="Type your message..."
-                            style={{
-                                width: '100%',
-                                padding: '12px 50px 12px 16px', // Extra padding on right for button
-                                fontSize: '16px',
-                                border: '1px solid #ddd',
-                                borderRadius: '25px',
-                                outline: 'none',
-                                backgroundColor: 'white',
-                                boxSizing: 'border-box'
-                            }}
-                            disabled={loading}
-                        />
-                        {!loading ? (
-                            <button
-                                type="submit"
-                                disabled={!question.trim()}
-                                style={{
-                                    position: 'absolute',
-                                    right: '8px',
-                                    width: '36px',
-                                    height: '36px',
-                                    backgroundColor: !question.trim() ? '#e0e0e0' : '#007bff',
-                                    color: !question.trim() ? '#999' : 'white',
-                                    border: 'none',
-                                    borderRadius: '50%',
-                                    cursor: !question.trim() ? 'not-allowed' : 'pointer',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    fontSize: '16px',
-                                    transition: 'background-color 0.2s ease'
-                                }}
-                            >
-                                {/* Airplane icon (horizontal, pointing right) */}
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                                    <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
-                                </svg>
-                            </button>
-                        ) : (
                             <button
                                 type="button"
-                                onClick={handleStop}
+                                onClick={toggleTools}
                                 style={{
-                                    position: 'absolute',
-                                    right: '8px',
-                                    width: '36px',
-                                    height: '36px',
-                                    backgroundColor: '#dc3545',
-                                    color: 'white',
+                                    padding: '4px 8px',
+                                    fontSize: '12px',
+                                    backgroundColor: 'transparent',
+                                    color: selectedTools.length > 0 ? '#007bff' : '#666',
                                     border: 'none',
-                                    borderRadius: '50%',
                                     cursor: 'pointer',
                                     display: 'flex',
                                     alignItems: 'center',
-                                    justifyContent: 'center',
-                                    fontSize: '14px',
-                                    transition: 'background-color 0.2s ease'
+                                    gap: '4px',
+                                    fontWeight: '500',
+                                    transition: 'all 0.2s ease',
+                                    borderRadius: '8px'
                                 }}
                             >
-                                {/* Stop icon (square inside circle) */}
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-                                    <rect x="6" y="6" width="12" height="12" rx="1" />
-                                </svg>
+                                🛠️ Tools
+                                {selectedTools.length > 0 && (
+                                    <span style={{
+                                        backgroundColor: '#007bff',
+                                        color: 'white',
+                                        borderRadius: '6px',
+                                        padding: '1px 4px',
+                                        fontSize: '9px',
+                                        minWidth: '12px',
+                                        textAlign: 'center',
+                                        lineHeight: '1'
+                                    }}>
+                                        {selectedTools.length}
+                                    </span>
+                                )}
                             </button>
-                        )}
+
+                            {/* Tools Dropdown - expanding upward */}
+                            {showTools && (
+                                <div style={{
+                                    position: 'absolute',
+                                    bottom: '100%',
+                                    left: '16px',
+                                    marginBottom: '5px',
+                                    backgroundColor: 'white',
+                                    border: '1px solid #ddd',
+                                    borderRadius: '8px',
+                                    boxShadow: '0 -4px 12px rgba(0, 0, 0, 0.1)',
+                                    zIndex: 1000,
+                                    minWidth: '200px'
+                                }}>
+                                    <div
+                                        onClick={() => toggleTool('search')}
+                                        style={{
+                                            padding: '12px 16px',
+                                            cursor: 'pointer',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '8px',
+                                            borderRadius: '8px',
+                                            backgroundColor: selectedTools.includes('search') ? '#f0f8ff' : 'white',
+                                            borderLeft: selectedTools.includes('search') ? '3px solid #007bff' : '3px solid transparent',
+                                            transition: 'all 0.2s ease'
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            if (!selectedTools.includes('search')) {
+                                                e.target.style.backgroundColor = '#f8f9fa';
+                                            }
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            if (!selectedTools.includes('search')) {
+                                                e.target.style.backgroundColor = 'white';
+                                            }
+                                        }}
+                                    >
+                                        <span style={{ fontSize: '18px' }}>🌐</span>
+                                        <span style={{ fontSize: '14px', fontWeight: '500' }}>Web Search</span>
+                                        {selectedTools.includes('search') && (
+                                            <span style={{ marginLeft: 'auto', color: '#007bff', fontSize: '14px' }}>✓</span>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </form>
             </div>
