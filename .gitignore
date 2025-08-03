@@ -1,0 +1,9 @@
+# Python files
+.venv
+__pycache__/
+
+# Node modules
+node_modules/
+
+# Environment variables
+.env
