@@ -61,11 +61,6 @@ async def answer_question_generator(question: str):
                     "is_complete": False,
                 }
 
-            print("*" * 50)
-            print(data)
-            print("*" * 50)
-            print()
-                
             yield f"data: {json.dumps(data)}\n\n"
 
     yield f"data: {json.dumps({'thought': False, 'content': '', 'is_complete': True})}\n\n"
