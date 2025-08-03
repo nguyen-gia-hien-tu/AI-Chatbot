@@ -110,7 +110,7 @@ function App() {
                 clearInterval(typingIntervalRef.current);
                 typingIntervalRef.current = null;
             }
-        }, 20); // 20ms between characters - adjust typing speed
+        }, 15); // 15ms between characters - adjust typing speed
     };
 
     const handleSubmit = async (e) => {
@@ -319,7 +319,7 @@ function App() {
                                                 }}>
                                                     ▶
                                                 </span>
-                                                🤔 Thought Process
+                                                🔍 Thought Process
                                             </div>
 
                                             {/* Thought Content - Collapsible */}
