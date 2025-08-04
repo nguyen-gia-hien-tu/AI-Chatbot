@@ -195,7 +195,7 @@ function App() {
                         const data = JSON.parse(event.data);
 
                         if (data.content && data.content.length > 0) {
-                            if (data.thought) {
+                            if (data.is_thought) {
                                 typeText(data.content, true); // This is thought content
                             } else {
                                 typeText(data.content, false); // This is regular content

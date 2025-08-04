@@ -75,13 +75,13 @@ async def answer_question_generator(
                 continue
             elif part.thought:
                 data = {
-                    "thought": True,
+                    "is_thought": True,
                     "content": part.text,
                     "is_complete": False,
                 }
             elif part.text:
                 data = {
-                    "thought": False,
+                    "is_thought": False,
                     "content": part.text,
                     "is_complete": False,
                 }
