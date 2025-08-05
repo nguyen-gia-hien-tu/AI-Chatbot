@@ -71,7 +71,7 @@ async def answer_question_generator(
 
     async for chunk in response:
         for part in chunk.candidates[0].content.parts:
-            if not part.text:   
+            if not part.text:
                 continue
             elif part.thought:
                 data = {
@@ -88,7 +88,7 @@ async def answer_question_generator(
 
             yield f"data: {json.dumps(data)}\n\n"
 
-    yield f"data: {json.dumps({'thought': False, 'content': '', 'is_complete': True})}\n\n"
+    yield f"data: {json.dumps({'is_thought': False, 'content': '', 'is_complete': True})}\n\n"
 
 
 
@@ -98,7 +98,7 @@ async def answer_question(request: AnswerQuestionRequest):
     Endpoint that accepts a question and returns a streaming response
     """
     return StreamingResponse(
-        answer_question_generator(request.question, request.tools), 
+        answer_question_generator(request.question, request.tools),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",
